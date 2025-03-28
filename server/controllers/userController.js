@@ -21,32 +21,24 @@ exports.createUser = async (req, res) => {
 // To Migrate the User
 exports.migrateUser = async (req, res) => {
   try {
-    const { userId } = req.params;
-    const { newCompanyId } = req.body;
+    // Validate input
+    if (!req.body.newCompanyId) {
+      return res.status(400).json({ success: false, message: "New company ID is required" });
+    }
 
-    console.log("Received Migration Request:", { userId, newCompanyId });
-
-    const user = await User.findByPk(userId);
+    const user = await User.findByPk(req.params.userId);
     if (!user) {
       return res.status(404).json({ success: false, message: "User not found" });
     }
 
-    // Check if the target company exists
-    const company = await Company.findByPk(newCompanyId);
-    if (!company) {
-      return res.status(404).json({ success: false, message: "Target company not found" });
-    }
-
-    // Update the user's companyId
-    user.companyId = newCompanyId;
+    // Attempt migration
+    user.companyId = req.body.newCompanyId;
     await user.save();
 
-    console.log("Updated User:", user);
-
-    res.json({ success: true, message: "User migrated successfully", user });
+    console.log("Migration successful!");
+    return res.json({ success: true, message: "User migrated successfully" });
   } catch (error) {
-    console.error("Migration Error:", error);
-    res.status(500).json({ success: false, message: "Migration failed", error });
+    return res.status(500).json({ success: false, message: "Migration failed", error: error.message });
   }
 };
 

@@ -7,5 +7,9 @@ const store = configureStore({
         companies: companyReducer,
         users: userReducer
     },
+  middleware:(getDefaultMiddleware) =>
+      getDefaultMiddleware({
+        serializableCheck: false,
+      }),
 });
 export default store;

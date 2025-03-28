@@ -118,13 +118,13 @@ const companySlice = createSlice({
       })
       .addCase(manageCompanyUsers.fulfilled, (state, action) => {
         console.log("API Response:", action.payload);
-        const { companyId, updatedUsers } = action.payload; // Ensure API returns these
+        const { companyId, updatedUsers } = action.payload;
         const index = state.companies.findIndex((c) => c.id === companyId);
       
         if (index !== -1) {
           state.companies[index] = {
             ...state.companies[index],
-            users: updatedUsers, // Only update users list, keep other data intact
+            users: updatedUsers,
           };
         }
       });

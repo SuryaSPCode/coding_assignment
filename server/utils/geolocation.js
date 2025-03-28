@@ -1,13 +1,14 @@
 const axios = require("axios");
 
 async function getCoordinates(address) {
-  const API_KEY = process.env.GOOGLE_MAPS_API_KEY;
-  const url = `https://maps.gomaps.pro/maps/api/js?address=${encodeURIComponent(address)}&key=${API_KEY}`;
+  const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`;
   
   const response = await axios.get(url);
   console.log(response);
   
-  const { lat, lng } = response.data.results[0].geometry.location;
+  const lat = parseFloat(response.data[0].lat) ?? null;
+  const lng = parseFloat(response.data[0].lon) ?? null;
+  
   return { lat, lng };
 }
 

@@ -19,11 +19,9 @@ exports.createCompany = async (req, res) => {
   try {
     const { name, address } = req.body;
 
-    //const { lat, lng } = await getCoordinates(address);
-    //I have commented this part because I couldn't able to find the correct API endpoint but I have added the logic.
-    //While creating company itself we can give the address and using that we can get the Coordinates lat & long
+    const { lat, lng } = await getCoordinates(address);
 
-    const company = await Company.create({ name, address, lat : null, lng : null });
+    const company = await Company.create({ name, address, lat, lng});
     res.status(201).send({
       success: true,
       data: company

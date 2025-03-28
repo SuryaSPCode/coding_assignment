@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { showToast } from "../utils/toastService";
 import "../styles/UserAdmin.css";
 import {
   fetchUsers,
@@ -16,6 +17,7 @@ const AdminPanel = () => {
   const dispatch = useDispatch();
   const { users } = useSelector((state) => state.users);
   const { companies } = useSelector((state) => state.companies);
+  const [migrationError, setMigrationError] = useState(null);
   const selectedUser = useSelector((state) => state.users.selectedUser);
   console.log("Selected User from Redux:", selectedUser);
   
@@ -23,6 +25,8 @@ const AdminPanel = () => {
     firstName: "",
     lastName: "",
     email: "",
+    designation: "",
+    dateOfBirth: "",
     active: true,
     companyId: "",
   });
@@ -35,12 +39,13 @@ const AdminPanel = () => {
     dispatch(fetchCompanies());
   }, [dispatch]);
 
-  // const handleCreateUser = () => {
-  //   console.log("DATA", userData);
+  const handleCreateUser = () => {
+    console.log("DATA", userData);
     
-  //   dispatch(createUser(userData));
-  //   setUserData({ firstName: "", lastName: "", email: "", active: true, companyId: "" });
-  // };
+    dispatch(createUser(userData));
+    showToast("success","Created Successfully");
+    setUserData({ firstName: "", lastName: "", email: "", active: true, companyId: "" });
+  };
 
   const handleUpdateUser = (e) => {
     e.preventDefault();
@@ -62,15 +67,18 @@ const AdminPanel = () => {
           });
         })
         .catch((error) => console.error("Update error:", error));
+        showToast("success","Updated Successfully");
     }
   };
 
   const handleDeactivateUser = (id) => {
     dispatch(deactivateUser(id));
+    showToast("success","Deactived Successfully");
   };
 
   const handleDeleteUser = (id) => {
     dispatch(deleteUser(id));
+    showToast("success","Deleted Successfully");
   };
 
   const handleGetUserById = async () => {
@@ -79,29 +87,28 @@ const AdminPanel = () => {
     }
   };
 
-  const handleMigrateUser = () => {
-    console.log("selectedUserId:", selectedUserId);
-    console.log("targetCompanyId:", targetCompanyId);
-  
-    if (!selectedUserId) {
-      console.error("User ID is missing!");
-      return;
-    }
-    if (!targetCompanyId) {
-      console.error("Target Company ID is missing!");
-      return;
-    }
-  
-    dispatch(migrateUser({ userId: selectedUserId, newCompanyId: targetCompanyId }))
-      .unwrap()
-      .then(() => {
-        console.log("User migration successful!");
-        dispatch(fetchUsers());
-      })
-      .catch((error) => console.error("Migration error:", error));
-  
-    setSelectedUserId("");
-    setTargetCompanyId("");
+  const handleMigrateUser = async () => {
+  console.log("selectedUserId:", selectedUserId);
+  console.log("targetCompanyId:", targetCompanyId);
+
+  if (!selectedUserId || !targetCompanyId) {
+    console.error("User ID or Target Company ID is missing!");
+    return;
+  }
+
+  try {
+    console.log("Dispatching migrateUser...");
+    const response = await dispatch(migrateUser({ userId: selectedUserId, newCompanyId: targetCompanyId })).unwrap();
+    console.log("Migration Success:", response);
+    showToast("success","Migrated")
+    dispatch(fetchUsers()); // Refresh list
+  } catch (error) {
+    setMigrationError(true);
+    console.error("Migration Error:", error);
+  }
+
+  setSelectedUserId("");
+  setTargetCompanyId("");
   };
 
   // Handle form submission
@@ -119,30 +126,6 @@ const AdminPanel = () => {
       ...userData,
       [name]: type === "checkbox" ? checked : value,
     });
-  };
-
-  const handleUpdateUsers = () => {
-    if (selectedUserId) {
-      dispatch(updateUser({ id: selectedUserId, data: userData }))
-        .unwrap()
-        .then(() => {
-          console.log("User updated successfully!");
-          dispatch(fetchUsers()); // Refresh user list
-          setSelectedUserId("");
-          setUserData({
-            firstName: "",
-            lastName: "",
-            email: "",
-            designation: "",
-            dateOfBirth: "",
-            active: true,
-            companyId: "",
-          });
-        })
-        .catch((error) => console.error("Update error:", error));
-    } else {
-      console.error("No user selected for update!");
-    }
   };
 
   const handleEditUser = async (id) => {
@@ -169,7 +152,7 @@ const AdminPanel = () => {
   return (
     <div>
       <h2>Manage Users</h2>
-      <form onSubmit={selectedUserId ? handleUpdateUser : (e) => { e.preventDefault(); dispatch(createUser(userData)); }}>
+      <form onSubmit={selectedUserId ? handleUpdateUser : handleCreateUser}>
         <input type="text" name="firstName" placeholder="First Name" value={userData.firstName} onChange={handleChange} required />
         <input type="text" name="lastName" placeholder="Last Name" value={userData.lastName} onChange={handleChange} required />
         <input type="email" name="email" placeholder="Email" value={userData.email} onChange={handleChange} required />
@@ -233,6 +216,11 @@ const AdminPanel = () => {
         ))}
       </select>
       <button onClick={handleMigrateUser}>Migrate User</button>
+
+      <div>
+        {migrationError && <p style={{ color: "red" }}>{migrationError}</p>}
+        {/* Migration form here */}
+      </div>
 
     {/* Check if the user list is empty */}
     {users.length === 0 ? (

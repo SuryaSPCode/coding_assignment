@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import "../styles/CompanyAdmin.css";
 import { Link } from "react-router-dom";
+import { showToast } from "../utils/toastService";
 import {
   fetchCompanies,
   createCompany,
@@ -30,14 +31,29 @@ const CompanyAdmin = () => {
   }, [dispatch]);
 
   const handleCreateCompany = () => {
-    dispatch(createCompany(companyData));
-    setCompanyData({ name: "", address: "" });
+    dispatch(createCompany(companyData))
+      .unwrap()
+      .then(() => {
+        showToast("success", "Company Created Successfully!");
+        setCompanyData({ name: "", address: "" });
+      })
+      .catch(() => {
+        showToast("error", "Failed to create company");
+      });
   };
 
   const handleUpdateCompany = () => {
     if (selectedCompanyId) {
-      dispatch(updateCompany({ id: selectedCompanyId, data: companyData }));
-      setSelectedCompanyId(null);
+      dispatch(updateCompany({ id: selectedCompanyId, data: companyData }))
+      .unwrap()
+      .then(() => {
+        showToast("info", "Updated Company Successfully!");
+        setSelectedCompanyId(null);
+        setCompanyData({ name: "", address: "" });
+      })
+      .catch(() => {
+        showToast("error", "Updated Failed");
+      });
     }
   };
 
@@ -48,6 +64,7 @@ const CompanyAdmin = () => {
   const handleManageCompanyUsers = () => {
     if (selectedCompanyId && userId) {
       dispatch(manageCompanyUsers({ companyId: selectedCompanyId, userId, action: actionType }));
+      showToast("success","User got Moved to Different Company");
       setUserId("");
     }
   };
@@ -114,7 +131,7 @@ const CompanyAdmin = () => {
           {company.name} - {company.address}
           <button onClick={() => handleEditCompany(company)}>Edit</button>
           <button onClick={() => handleDeleteCompany(company.id)}>Delete</button>
-          <Link to={`/company/${company.id}`}>Location</Link>
+          <Link to={`/company/details/${company.id}`}>Location</Link>
         </li>
       ))}
     </ul>
