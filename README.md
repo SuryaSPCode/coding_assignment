@@ -28,10 +28,4 @@ This **Company/User Management App** is a **full-stack web application** that al
 
 **Optimized REST API**  
 - Error handling and logging  
-- Efficient database queries  
-
-
-Part which I couldn't able to complete entirly is the geolocation API
-- Reason:
-    - Coudln't able to get the correct API end point
-But completed the Logic part    
+- Efficient database queries    
